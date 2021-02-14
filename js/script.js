@@ -219,45 +219,42 @@ window.addEventListener('DOMContentLoaded', function() {
         postData(item);
     })
 
+    
     function postData(form) {
-        form.addEventListener('submit', (e) =>{
+        form.addEventListener('submit', (e) => {
             e.preventDefault();
 
-            const statusMessage = document.createElement('img');
+            let statusMessage = document.createElement('img');
             statusMessage.src = message.loading;
             statusMessage.style.cssText = `
-            display: block;
-            margin: 0 auto;`;
-            
+                display: block;
+                margin: 0 auto;
+            `;
             form.insertAdjacentElement('afterend', statusMessage);
-
-            const request = new XMLHttpRequest();
-            request.open('POST', 'server.php');
-
-            // request.setRequestHeader('Content-type', 'multipart/form-data') при использовании обьекта Form Data заголовки не нужны
-
-            request.setRequestHeader('Content-type', 'application/json');
-
+        
             const formData = new FormData(form);
 
             const object = {};
-
-            formData.forEach(function (value, key){
+            formData.forEach(function(value, key){
                 object[key] = value;
             });
-            const json = JSON.stringify(object);
-            request.send(json);
 
-            request.addEventListener('load', ()=>{
-                if (request.status === 200) {
-                    showThanksModal(message.success);
-                    console.log(request.response);
-                    form.reset();
-                    statusMessage.remove();
-                }else{
-                    showThanksModal(message.failure);
-                }
-            })
+            fetch('server.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(object)
+            }).then(data => data.text())
+            .then(data => {
+                console.log(data);
+                showThanksModal(message.success);
+                statusMessage.remove();
+            }).catch(() => {
+                showThanksModal(message.failure);
+            }).finally(() => {
+                form.reset();
+            });
         });
     }
     function showThanksModal (message){
@@ -282,6 +279,7 @@ window.addEventListener('DOMContentLoaded', function() {
             closeModal();
         },4000)
     }
+
 
     // Slider
     let offset = 0;
